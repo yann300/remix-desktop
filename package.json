@@ -28,8 +28,16 @@
     "env-cmd": "^10.0.1"
   },
   "build": {
-    "productName": "Remix Desktop",
+    "productName": "Remix - Ethereum IDE",
     "appId": "org.ethereum.remix-desktop",
+    "asar": false,
+    "files": [
+      "main.js",
+      "build/**/*.png",
+      "build/**/*.ico",
+      "*.asar",
+      "*.zip"
+    ],
     "mac": {
       "category": "public.app-category.productivity",
       "target": [
@@ -60,7 +68,7 @@
     }
   },
   "dependencies": {
-    "@philipplgh/electron-app-manager": "^0.53.0",
-    "remixd": "^0.1.8-alpha.7"
+    "@philipplgh/electron-app-manager": "^0.54.0",
+    "remixd": "^0.1.8-alpha.9"
   }
 }

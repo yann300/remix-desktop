@@ -1,4 +1,5 @@
 const remixd = require('remixd')
+const path = require('path')
 const os = require('os');
 
 const { app, BrowserWindow, dialog } = require('electron')
@@ -17,7 +18,14 @@ const package = 'package://github.com/ethereum/remix-ide'
 
 app.on('ready', () => {
   if (!process.argv[2]) {
-    dialog.showOpenDialog({ properties: ['openDirectory', 'createDirectory'] }).
+    dialog.showOpenDialog(
+      { 
+        defaultPath: os.homedir(),
+        buttonLabel: "Open",
+        title: 'Select Working Directory (Default to the Home directory)', 
+        properties: ['openDirectory', 'createDirectory', 'promptToCreate'],
+        message: 'Working Directory'
+      }).
       then((result) => {
         if (result.canceled || result.filePaths.length === 0) {
           remixdInit(os.homedir())
@@ -37,11 +45,19 @@ app.on('ready', () => {
   createWindow().loadURL(package)
 })
 
+const iconPath = () =>
+  path.resolve(
+    process.platform === 'win32'
+      ? `${__dirname}/build/TrayIcon.ico`
+      : `${__dirname}/build/IconTemplate.png`
+  )
+
 function createWindow () {
   // Create the browser window.
   return new BrowserWindow({
     width: 1024,
     height: 768,
+    icon: iconPath(),
     webPreferences: {
       nodeIntegration: false
     }
@@ -61,10 +77,3 @@ let remixdInit = (folder) => {
   remixd.services.sharedFolder.sharedFolder(folder, false)
   remixd.services.sharedFolder.setupNotifications(folder)
 }
-
-function message (name, value) {
-  return JSON.stringify({type: 'notification', scope: 'sharedfolder', name: name, value: value})
-}
-
-
-
