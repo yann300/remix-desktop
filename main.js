@@ -1,7 +1,7 @@
 const remixd = require('remixd')
 const os = require('os');
 
-const { app, BrowserWindow } = require('electron')
+const { app, BrowserWindow, dialog } = require('electron')
 const { AppManager, registerPackageProtocol } = require('@philipplgh/electron-app-manager')
 registerPackageProtocol()
 
@@ -12,31 +12,59 @@ const updater = new AppManager({
   electron: true
 })
 
+const package = 'package://github.com/ethereum/remix-ide'
+// const package = 'http://127.0.0.1:8080'
+
+app.on('ready', () => {
+  if (!process.argv[2]) {
+    dialog.showOpenDialog({ properties: ['openDirectory', 'createDirectory'] }).
+      then((result) => {
+        if (result.canceled || result.filePaths.length === 0) {
+          remixdInit(os.homedir())
+        } else {
+          remixdInit(result.filePaths[0])
+        }
+      }).
+      catch((error) => {
+        console.log(error)
+      })
+  } else {
+    var folder = process.argv[2]
+    remixdInit(folder)
+  }
+
+  remixdStart()
+  createWindow().loadURL(package)
+})
+
 function createWindow () {
   // Create the browser window.
-  let win = new BrowserWindow({
+  return new BrowserWindow({
     width: 1024,
     height: 768,
     webPreferences: {
       nodeIntegration: false
     }
   })
-
-  // and load the index.html of the app.
-  // win.loadFile('index.html')
-  win.loadURL('package://github.com/ethereum/remix-ide')
 }
 
-app.on('ready', createWindow)
+let remixdStart = () => {
+  const remixIdeUrl = 'package://c8ef3f8f1976e3597787fab95b72bf83.mod'
+  // const remixIdeUrl = 'http://127.0.0.1:8080'
+  var router = new remixd.Router(65520, remixd.services.sharedFolder, { remixIdeUrl }, (webSocket) => {
+    remixd.services.sharedFolder.setWebSocket(webSocket)
+  })
+  router.start()
+}
 
-var folder = process.argv.length > 2 ? process.argv[2] : os.homedir()
-
-var router = new remixd.Router(65520, remixd.services.sharedFolder, { remixIdeUrl: 'package://cd339faeeb58f4c96b9b5ff62556c364.mod' }, (webSocket) => {
-  remixd.services.sharedFolder.setWebSocket(webSocket)
-  remixd.services.sharedFolder.setupNotifications(folder)
+let remixdInit = (folder) => {
   remixd.services.sharedFolder.sharedFolder(folder, false)
-})
+  remixd.services.sharedFolder.setupNotifications(folder)
+}
 
-const stopIt = router.start()
+function message (name, value) {
+  return JSON.stringify({type: 'notification', scope: 'sharedfolder', name: name, value: value})
+}
 
-app.on('quit', () => stopIt())
+
+
