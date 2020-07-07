@@ -23,7 +23,7 @@
   },
   "homepage": "https://github.com/ethereum/remix-desktop#readme",
   "devDependencies": {
-    "electron": "6.0.9",
+    "electron": "9.1.0",
     "electron-builder": "21.2.0",
     "env-cmd": "^10.0.1"
   },
